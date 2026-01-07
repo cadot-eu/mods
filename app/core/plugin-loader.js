@@ -38,13 +38,13 @@ export async function loadPlugins(fastify) {
   const files = fs.readdirSync(pluginsDir)
     .filter(f => f.endsWith('.js'))
   
-  // Ne charge que les plugins qui ont un ordre défini dans order.json
+  // Ne charge que les plugins qui ont un ordre défini dans order.yaml
   const filesWithOrder = files.filter(f => {
     const pluginName = path.basename(f, '.js')
     return order.includes(pluginName)
   })
   
-  // Trie selon order.json
+  // Trie selon order.yaml
   const sortedFiles = filesWithOrder.sort((a, b) => {
     const nameA = path.basename(a, '.js')
     const nameB = path.basename(b, '.js')

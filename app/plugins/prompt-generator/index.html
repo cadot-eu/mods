@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="promptApp()" x-init="init()">
+<head>
+  <meta charset="UTF-8">
+  <title>Prompt Generator</title>
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="container py-4">
+
+  <div class="card shadow">
+    <div class="card-header d-flex gap-2 align-items-center">
+      <i class="bi bi-pencil-square"></i>
+      <strong>Générateur de prompt IA</strong>
+    </div>
+    <div class="card-body d-flex flex-column gap-3">
+
+      <input type="text" class="form-control" placeholder="Nom du plugin" x-model="pluginName">
+
+      <textarea class="form-control" rows="2"
+                placeholder="But du plugin (ex: gérer fuseau horaire, récupérer données API...)"
+                x-model="purpose"></textarea>
+
+      <textarea class="form-control" rows="2"
+                placeholder="Commentaires supplémentaires (ex: librairies npm, config Fastify...)"
+                x-model="comments"></textarea>
+
+      <div class="accordion mt-3" id="optionalSections">
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRoutes">
+              <i class="bi bi-link-45deg me-2"></i>
+              Configuration des routes Fastify (optionnel)
+            </button>
+          </h2>
+          <div id="collapseRoutes" class="accordion-collapse collapse" data-bs-parent="#optionalSections">
+            <div class="accordion-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Méthode HTTP</label>
+                  <select class="form-select mb-2" x-model="newRoute.method">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="PATCH">PATCH</option>
+                    <option value="OPTIONS">OPTIONS</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Endpoint</label>
+                  <input type="text" class="form-control mb-2" 
+                         placeholder="/api/endpoint" 
+                         x-model="newRoute.path">
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="form-label">Description</label>
+                  <input type="text" class="form-control mb-2" 
+                         placeholder="Description de la route" 
+                         x-model="newRoute.description">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Paramètres</label>
+                  <input type="text" class="form-control mb-2" 
+                         placeholder="ex: id, name" 
+                         x-model="newRoute.params">
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-success" @click="addRoute">
+                  <i class="bi bi-plus"></i> Ajouter route
+                </button>
+                <button class="btn btn-warning" @click="clearRoutes">
+                  <i class="bi bi-trash"></i> Vider routes
+                </button>
+              </div>
+              
+              <div class="mt-3" x-show="routesList.length > 0">
+                <label class="form-label fw-bold">Routes configurées</label>
+                <div class="list-group">
+                  <template x-for="(route, index) in routesList" :key="index">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                      <div>
+                        <span class="badge bg-primary me-2" x-text="route.method"></span>
+                        <span class="fw-bold" x-text="route.path"></span>
+                        <small class="text-muted d-block" x-text="route.description"></small>
+                        <small class="text-secondary" x-show="route.params" x-text="'Paramètres: ' + route.params"></small>
+                      </div>
+                      <button class="btn btn-danger btn-sm" @click="removeRoute(index)">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <label class="form-label fw-bold">Routes générées (format Fastify)</label>
+                <textarea class="form-control" rows="3" x-model="routes" readonly></textarea>
+                <small class="text-muted">Ces routes seront incluses dans le prompt généré</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseApi">
+              <i class="bi bi-gear me-2"></i>
+              API partagées (fastify.NOM_PLUGIN) (optionnel)
+            </button>
+          </h2>
+          <div id="collapseApi" class="accordion-collapse collapse" data-bs-parent="#optionalSections">
+            <div class="accordion-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Nom de l'API</label>
+                  <input type="text" class="form-control mb-2" 
+                         placeholder="nomPlugin" 
+                         x-model="apiConfig.name">
+                  <small class="text-muted">Nom utilisé pour fastify.nomPlugin</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Description de l'API</label>
+                  <input type="text" class="form-control mb-2" 
+                         placeholder="Description de l'API" 
+                         x-model="apiConfig.description">
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-4">
+                  <label class="form-label">Méthode</label>
+                  <input type="text" class="form-control mb-2" 
+                         placeholder="nomMethode" 
+                         x-model="newApiMethod.name">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Paramètres</label>
+                  <input type="text" class="form-control mb-2" 
+                         placeholder="param1, param2?" 
+                         x-model="newApiMethod.params">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Type de retour</label>
+                  <input type="text" class="form-control mb-2" 
+                         placeholder="Promise<Object>" 
+                         x-model="newApiMethod.returnType">
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-12">
+                  <label class="form-label">Description</label>
+                  <input type="text" class="form-control mb-2" 
+                         placeholder="Description de la méthode" 
+                         x-model="newApiMethod.description">
+                </div>
+              </div>
+              
+              <div class="d-flex gap-2">
+                <button class="btn btn-success" @click="addApiMethod">
+                  <i class="bi bi-plus"></i> Ajouter méthode
+                </button>
+                <button class="btn btn-warning" @click="clearApiMethods">
+                  <i class="bi bi-trash"></i> Vider méthodes
+                </button>
+              </div>
+              
+              <div class="mt-3" x-show="apiConfig.methods.length > 0">
+                <label class="form-label fw-bold">Méthodes configurées</label>
+                <div class="list-group">
+                  <template x-for="(method, index) in apiConfig.methods" :key="index">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                      <div>
+                        <span class="fw-bold" x-text="method.name"></span>
+                        <span class="text-muted ms-2" x-text="'(' + method.params + ')'"></span>
+                        <span class="badge bg-info ms-2" x-text="method.returnType"></span>
+                        <small class="text-muted d-block" x-text="method.description"></small>
+                      </div>
+                      <button class="btn btn-danger btn-sm" @click="removeApiMethod(index)">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <label class="form-label fw-bold">API générées (format Fastify)</label>
+                <textarea class="form-control" rows="3" x-model="apiText" readonly></textarea>
+                <small class="text-muted">Ces API seront incluses dans le prompt généré</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" @click="generatePrompt">
+        Générer le prompt
+      </button>
+
+      <textarea class="form-control" rows="8" x-model="prompt" readonly></textarea>
+
+    </div>
+  </div>
+
+  <script src="/api/prompt-generator/app.js"></script>
+</body>
+</html>

@@ -19,6 +19,8 @@ Guide complet pour installer, configurer et développer avec le framework mods.
 ```bash
 git clone https://github.com/cadot-eu/mods.git
 cd mods
+mv app/config/order.yaml.example app/config/order.yaml
+mv app/config/sqlite.yaml.example app/config/sqlite.yaml
 ```
 
 ### 2. Installer les dépendances
@@ -38,6 +40,7 @@ docker-compose up
 docker-compose up -d
 ```
 
+
 L'application sera accessible sur `http://localhost:80`
 
 ## Structure du projet
@@ -55,10 +58,10 @@ mods/
 │   │   ├── hot-config.js    # Configuration dynamique
 │   │   ├── log.js           # Système de logs
 │   │   └── plugin-loader.js # Chargeur de plugins
-│   └── static/              # Fichiers statiques (CSS, JS, images)
-├── config/                  # Fichiers de configuration
-│   ├── order.json           # Ordre de chargement des plugins
-│   └── *.yaml               # Configurations spécifiques
+│   ├──static/              # Fichiers statiques (CSS, JS, images)
+│   ├──config/                  # Fichiers de configuration
+│   │   ├── order.yaml           # Ordre de chargement des plugins
+│   │   ├── *.yaml               # Configurations spécifiques
 ├── compose.yaml             # Docker Compose principal
 ├── docker-compose.override.yml.example  # Exemple de surcharge
 └── .env.local               # Variables d'environnement (optionnel)

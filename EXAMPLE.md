@@ -12,85 +12,46 @@ Créer un plugin qui affiche l'heure actuelle dans différents fuseaux horaires 
 - Node.js et npm
 - Docker
 
+## Base: Cloner le dépot
+
+```bash  git clone https://github.com/cadot-eu/mods.git example
+mv app/config/order.yaml.example app/config/order.yaml
+mv app/config/sqlite.yaml.example app/config/sqlite.yaml
+```
+
+Si vous regardez les logs de docker vous pourrez voir
+INFO: [HOT-CONFIG] Configs loaded: order
+INFO: [PLUGIN-LOADER] 0 plugins chargés
+
+
 ## Étape 1 : Installer la dépendance
 
 Installez le package @arc-js/timez :
 
 ```bash
 cd app
-npm install @arc-js/timez
+npm run d:npm install @arc-js/timez
 ```
+## Étape 2 : Générer prompt IA par le plugins propmt-generator
 
-## Étape 2 : Créer la configuration
+Allez sur http://localhost/api/prompt-generator
 
-Créez le fichier `config/timezone.yaml` avec la liste des fuseaux horaires que vous souhaitez afficher.
+Remplissez les champs :
+
+- **Nom du plugin** : "timezone"
+- **But** : "gérer l'affichage de l'heure dans différents fuseaux horaires en utilisant une liste de pays définis dans timezone.yaml"
+- **Commentaires** : "Utiliser @arc-js/timez pour la gestion des fuseaux horaires"
+
+> **Note** : Les sections "Routes" et "API partagées" sont optionnelles et peuvent être laissées vides. L'IA générera automatiquement les routes et API appropriées selon le but du plugin.
+
+
+
 
 ## Étape 3 : Créer le plugin avec une IA
 
-Utilisez ce prompt pour créer le plugin avec une IA :
+Utilisez ce prompt pour créer le plugin avec une IA
 
-```
-Créer un plugin mods appelé "timezone" qui affiche l'heure actuelle dans différents fuseaux horaires sélectionnés par l'utilisateur.
-
-Le plugin doit exposer les routes suivantes :
-- GET /timezone : Affiche l'interface HTML avec un dropdown de sélection
-- GET /api/timezone/:timezone : Retourne l'heure actuelle pour un fuseau horaire donné au format JSON
-
-Utiliser la configuration depuis config/timezone.yaml et le package @arc-js/timez pour obtenir les informations de fuseau horaire.
-
-Le plugin doit :
-1. Charger la configuration des fuseaux horaires
-2. Créer une route API pour obtenir l'heure d'un fuseau horaire spécifique
-3. Créer une route pour afficher l'interface HTML
-4. Gérer les erreurs de fuseau horaire invalide
-5. Utiliser fastify.log pour les messages de log
-```
-
-## Étape 4 : Créer l'interface HTML avec une IA
-
-Utilisez ce prompt pour créer l'interface HTML avec une IA :
-
-```
-Créer une page HTML pour afficher une horloge mondiale avec Bootstrap et Alpine.js.
-
-La page doit contenir :
-1. Un dropdown pour sélectionner un fuseau horaire parmi une liste
-2. Un affichage en temps réel de l'heure et de la date pour le fuseau sélectionné
-3. Des boutons rapides pour les fuseaux horaires les plus courants
-4. Une liste complète des fuseaux horaires disponibles
-
-Utiliser Alpine.js pour :
-- Gérer la sélection du fuseau horaire
-- Mettre à jour l'heure en temps réel (toutes les secondes)
-- Afficher les informations dynamiquement
-
-Utiliser Bootstrap pour le style avec :
-- Un design moderne et responsive
-- Des cartes pour afficher l'heure
-- Une interface intuitive et claire
-
-La page doit appeler l'API /api/timezone/:timezone pour obtenir les informations de temps.
-```
-
-## Étape 5 : Créer la configuration avec une IA
-
-Utilisez ce prompt pour créer la configuration avec une IA :
-
-```
-Créer un fichier de configuration YAML pour un plugin timezone.
-
-Le fichier doit contenir une liste de fuseaux horaires avec pour chaque fuseau :
-- name : Nom affiché
-- city : Ville principale
-- country : Pays
-- timezone : Identifiant du fuseau horaire (ex: "Europe/Paris")
-
-Inclure au moins 5 fuseaux horaires populaires comme Paris, New York, Tokyo, Sydney et Londres.
-
-Ajouter des commentaires pour expliquer chaque champ.
-```
-
-## Étape 5 : Mettre à jour l'ordre des plugins
+## Étape 4 : Mettre à jour l'ordre des plugins
 
 Ajoutez votre plugin dans `config/order.yaml` :
 
@@ -98,7 +59,6 @@ Ajoutez votre plugin dans `config/order.yaml` :
 order:
   - env
   - sqlite
-  - db
   - timezone
 ```
 
@@ -257,7 +217,7 @@ npm install @arc-js/timez
 
 Vérifiez que :
 1. Le plugin est dans `app/plugins/timezone.js`
-2. Il est ajouté dans `config/order.json`
+2. Il est ajouté dans `config/order.yaml`
 3. L'application a été redémarrée
 
 ### Problème : Interface non affichée
@@ -282,4 +242,5 @@ Ce plugin timezone montre comment combiner :
 - **Configuration dynamique** avec HotConfig
 - **Package npm** pour les fonctionnalités externes
 
+Vous pouvez maintenant créer des plugins similaires pour d'autres fonctionnalités !
 Vous pouvez maintenant créer des plugins similaires pour d'autres fonctionnalités !

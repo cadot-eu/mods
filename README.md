@@ -49,39 +49,72 @@ Le format yaml ou json peut-être utilisé, l'avantage de yaml est de pouvoir aj
 
 ### Prompt pour IA
 
-Pour créer un plugin avec une IA, utilisez ce format de prompt avec l'exemple de code minimal :
+Pour créer un plugin avec une IA, utilisez ce format de prompt complet et détaillé :
 
 ```
-Créer un plugin mods appelé [NOM_PLUGIN] qui [BUT_DU_PLUGIN]. 
+Crée un plugin Fastify nommé [NOM_PLUGIN].
+Le fichier JS principal est dans plugins/[nom-plugin].js.
+Les assets sont dans plugins/[nom-plugin]/ et contiennent les fichiers nécessaires
 
-Structure de base du plugin :
+Le plugin charge la configuration via fastify.configs.get('NOM_PLUGIN').
+Le YAML définit [description des éléments de configuration].
+
+Le plugin doit exposer :
+GET /api/[nom-plugin] -> interface HTML
+GET /api/[nom-plugin]/[endpoint] -> pour retourner les données au format texte ou JSON
+L'interface utilise Bootstrap (Bootswatch au choix), Bootstrap Icons et Alpine.js, avec un layout basé sur d-flex et sans conflit Bootstrap / Alpine.
+
+L'utilisateur peut [décrire l'interaction principale de l'interface].
+
+Le code doit être propre, modulaire et conforme aux bonnes pratiques Fastify.
+
+Je peux installer des librairies pour simplifier le code au besoin par npm
+
+Exemple de structure de base :
 
 ```javascript
 import fp from 'fastify-plugin'
+import path from 'path'
 
 export default fp(async function (fastify) {
-  // Routes du plugin
-  fastify.get('/api/[endpoint1]', async (request, reply) => {
-    // Logique de la route
-    return { message: 'Réponse de l\'endpoint' }
+  // Accès à la configuration
+  const config = fastify.configs.get('NOM_PLUGIN')
+  
+  // Exemple de route API
+  fastify.get('/api/[nom-plugin]', async (request, reply) => {
+    // Logique de traitement
+    return { message: 'Données du plugin' }
   })
   
-  // Accès à la configuration
-  const config = fastify.configs.get('[fichier-config]')
+  // Exemple de route avec paramètre
+  fastify.get('/api/[nom-plugin]/:param', async (request, reply) => {
+    const { param } = request.params
+    // Traitement avec le paramètre
+    return { result: param }
+  })
+  
+  // Exemple de route HTML
+  fastify.get('/[nom-plugin]', async (request, reply) => {
+    const htmlPath = path.join(__dirname, '[nom-plugin]/index.html')
+    return reply.sendFile('index.html', htmlPath)
+  })
   
   fastify.log.info('Plugin [NOM_PLUGIN] chargé')
 }, { name: '[nom-plugin]' })
 ```
 
-Le plugin doit exposer les routes suivantes :
-- GET /api/[endpoint1] : [description]
-- POST /api/[endpoint2] : [description]
-
+Le plugin doit respecter les bonnes pratiques suivantes :
+- Utiliser les CDN Bootstrap et Bootstrap Icons
+- Choisir un template Bootswatch approprié
+- Utiliser Alpine.js pour l'interactivité
+- Éviter les conflits entre Bootstrap et Alpine.js
+- Structurer le code de manière modulaire
+- Ajouter une gestion appropriée des erreurs
 ```
 
 ### Enregistrer le plugin
 
-Ajoutez votre plugin dans `config/order.yaml` :
+Ajoutez votre plugin dans `app/config/order.yaml` :
 
 ```yaml
 order:

@@ -1,0 +1,13 @@
+path: ./data.db
+
+tables:
+  #temperature:
+    #columns:
+      #device_id: TEXT NOT NULL
+      #value: REAL NOT NULL
+  #consommation:
+    #columns:
+      #device_id: TEXT NOT NULL
+      #value: REAL NOT NULL
+    #energy: true
+    #aggregate_clean: false
