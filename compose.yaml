@@ -1,0 +1,25 @@
+services:
+  mods:
+    image: node:25-alpine
+    container_name: mods
+    working_dir: /app
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+    volumes:
+      - ./app:/app
+      - /app/node_modules  # Volume anonyme
+    ports:
+      - "80:3000"
+    command: >
+      sh -eu -c '
+        cd /app
+        if [ "${NODE_ENV}" = "production" ]; then
+          if [ -f package-lock.json ]; then npm ci --only=production; else npm install --omit=dev; fi
+          exec node index.js
+        else
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+          exec npx nodemon index.js
+        fi
+      '
+    restart: ${RESTART_POLICY:-no}
+

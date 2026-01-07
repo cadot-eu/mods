@@ -1,0 +1,6 @@
+services:
+  mosquitto:
+    deploy:
+      replicas: 0
+    restart: "no"
+

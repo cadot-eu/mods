@@ -1,0 +1,26 @@
+# Ordre de chargement des plugins
+# 
+# Les plugins sont chargés dans l'ordre défini ci-dessous.
+# L'ordre est important car certains plugins dépendent d'autres plugins.
+#
+# Règles :
+# - Chaque plugin doit être un fichier .js dans app/plugins/
+# - Le nom du plugin correspond au nom du fichier sans l'extension
+# - Les plugins doivent être chargés dans un ordre logique de dépendances
+
+order:
+  - env      # Variables d'environnement (toujours en premier)
+  - sqlite   # Base de données SQLite (doit être chargé avant les plugins qui l'utilisent)
+  - db       # Surveillance MQTT et Tuya (dépend de sqlite)
+
+# Pour ajouter un nouveau plugin :
+# 1. Créez le fichier app/plugins/nom-plugin.js
+# 2. Ajoutez "nom-plugin" à la fin de la liste "order"
+# 3. Redémarrez l'application avec docker-compose restart
+#
+# Exemple pour ajouter un plugin "timezone" :
+# order:
+#   - env
+#   - sqlite 
+#   - db
+#   - timezone
