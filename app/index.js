@@ -5,7 +5,8 @@ import { createLoggerMixin } from './core/log.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fastifyStatic from '@fastify/static';
-import fs from 'fs/promises';
+import fs from 'fs';
+import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,7 +42,10 @@ const fastify = Fastify({
 });
 
 // Charger et surveiller les configs avec HotConfig
-const configs = new HotConfig('./config', { logger: fastify.log });
+const configs = new HotConfig('./config', { 
+  logger: fastify.log,
+  restartOnUpdate: true  // Active le redémarrage automatique lors des modifications
+});
 await configs.start();
 
 // Rendre les configs accessibles dans fastify
@@ -63,12 +67,35 @@ fastify.get('/favicon.ico', async (request, reply) => {
   ];
   for (const p of candidates) {
     try {
-      const buf = await fs.readFile(p);
+      const buf = fs.readFileSync(p);
       return reply.type('image/x-icon').send(buf);
     } catch {}
   }
   return reply.code(404).send();
 });
+
+// Vérifier et charger automatiquement le plugin IA si les variables d'environnement sont présentes
+const envPath = path.join(__dirname, '.env.local');
+let env = {};
+
+if (fs.existsSync(envPath)) {
+  env = dotenv.parse(fs.readFileSync(envPath, 'utf8'));
+}
+
+const apiKey = env.OPENROUTER_API_KEY;
+const model = env.OPENROUTER_MODEL;
+
+if (apiKey && model) {
+  try {
+    const iaPlugin = await import('./core/ia.js');
+    await fastify.register(iaPlugin.default);
+    fastify.log.info('Plugin IA chargé automatiquement');
+  } catch (error) {
+    fastify.log.error(`Erreur chargement plugin IA: ${error.message}`);
+  }
+} else {
+  fastify.log.info('Plugin IA désactivé: variables d\'environnement manquantes');
+}
 
 // Charge tous les plugins
 await loadPlugins(fastify);

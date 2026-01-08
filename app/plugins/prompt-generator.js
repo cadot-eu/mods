@@ -20,5 +20,59 @@ export default fp(async function (fastify) {
     reply.type('application/javascript').send(fs.readFileSync(path.join(pluginDir, 'app.js')))
   })
 
-  fastify.log.info('Plugin prompt-generator chargé')
+  // Routes pour la création de fichiers et dossiers
+  fastify.post('/api/prompt-generator/create-file', async (request, reply) => {
+    try {
+      const { path: filePath, content } = request.body
+      
+      // Validation de base
+      if (!filePath || !content) {
+        return reply.status(400).send({ error: 'Chemin et contenu requis' })
+      }
+
+      // Vérifier que le chemin est dans le bon répertoire
+      if (!filePath.startsWith('/app/plugins/')) {
+        return reply.status(400).send({ error: 'Chemin invalide' })
+      }
+
+      // Créer le répertoire parent si nécessaire
+      const dir = path.dirname(filePath)
+      await fs.mkdir(dir, { recursive: true })
+
+      // Écrire le fichier
+      await fs.writeFile(filePath, content)
+      
+      fastify.log.info(`Fichier créé: ${filePath}`)
+      reply.send({ success: true, path: filePath })
+    } catch (error) {
+      fastify.log.error(`Erreur création fichier: ${error.message}`)
+      reply.status(500).send({ error: error.message })
+    }
+  })
+
+  fastify.post('/api/prompt-generator/create-directory', async (request, reply) => {
+    try {
+      const { path: dirPath } = request.body
+      
+      // Validation de base
+      if (!dirPath) {
+        return reply.status(400).send({ error: 'Chemin requis' })
+      }
+
+      // Vérifier que le chemin est dans le bon répertoire
+      if (!dirPath.startsWith('/app/plugins/')) {
+        return reply.status(400).send({ error: 'Chemin invalide' })
+      }
+
+      // Créer le répertoire
+      await fs.mkdir(dirPath, { recursive: true })
+      
+      fastify.log.info(`Répertoire créé: ${dirPath}`)
+      reply.send({ success: true, path: dirPath })
+    } catch (error) {
+      fastify.log.error(`Erreur création répertoire: ${error.message}`)
+      reply.status(500).send({ error: error.message })
+    }
+  })
+
 }, { name: 'prompt-generator' })

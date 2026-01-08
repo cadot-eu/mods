@@ -9,7 +9,7 @@ services:
       - ./app:/app
       - /app/node_modules  # Volume anonyme
     ports:
-      - "80:3000"
+      - 3000
     command: >
       sh -eu -c '
         cd /app
@@ -18,8 +18,8 @@ services:
           exec node index.js
         else
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
-          exec npx nodemon index.js
+          exec node index.js
         fi
       '
-    restart: ${RESTART_POLICY:-no}
+    restart: ${RESTART_POLICY:-on-failure}
 

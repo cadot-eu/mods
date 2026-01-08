@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import yaml from 'js-yaml';
+import { spawn, fork } from 'child_process';
 
 class HotConfig {
   constructor(configDir, options = {}) {
@@ -11,6 +12,7 @@ class HotConfig {
     this.callbacks = [];
     this.logger = options.logger;
     this.autoStart = options.autoStart !== false;
+    this.restartOnUpdate = options.restartOnUpdate || false;
   }
 
   async loadConfigFile(filePath) {
@@ -244,6 +246,19 @@ class HotConfig {
           this.logger.info(`Config "${changedConfig}" ${action}`);
         } else {
           console.log(`Config "${changedConfig}" ${action}`);
+        }
+        
+          // Redémarrer l'application si l'option est activée et que la config est mise à jour
+        if (this.restartOnUpdate && action === 'updated') {
+          if (this.logger) {
+            this.logger.info(`Restarting application due to config change...`);
+          } else {
+            console.log(`Restarting application due to config change...`);
+          }
+          
+          // Redémarrer l'application en quittant avec le code 42
+          // Docker redémarrera automatiquement le conteneur
+          process.exit(42);
         }
       }
     });

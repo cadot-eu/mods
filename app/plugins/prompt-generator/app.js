@@ -28,6 +28,11 @@ function promptApp() {
       description: ''
     },
 
+    // Nouveaux états pour la création de plugins
+    pluginFileName: '',
+    mainFileContent: '',
+    additionalFiles: [],
+
     init() {
       // Charger les routes sauvegardées du localStorage si elles existent
       const savedRoutes = localStorage.getItem('promptGeneratorRoutes')
@@ -193,6 +198,109 @@ function promptApp() {
 
     saveApiConfig() {
       localStorage.setItem('promptGeneratorApiConfig', JSON.stringify(this.apiConfig))
+    },
+
+    // Méthodes pour la création de plugins
+    addAdditionalFile() {
+      this.additionalFiles.push({
+        name: '',
+        content: ''
+      })
+    },
+
+    removeAdditionalFile(index) {
+      this.additionalFiles.splice(index, 1)
+    },
+
+    async createPlugin() {
+      // Validation de base
+      if (!this.pluginFileName.trim()) {
+        alert('Veuillez saisir un nom de plugin')
+        return
+      }
+
+      if (!this.mainFileContent.trim()) {
+        alert('Veuillez saisir le code JavaScript principal')
+        return
+      }
+
+      // Vérifier que le nom se termine par .js
+      if (!this.pluginFileName.endsWith('.js')) {
+        alert('Le nom du plugin doit se terminer par .js')
+        return
+      }
+
+      // Nettoyer le nom du plugin (enlever l'extension .js)
+      const pluginName = this.pluginFileName.replace('.js', '')
+      const pluginDir = `/app/plugins/${pluginName}`
+
+      try {
+        // Créer le plugin principal
+        if (this.additionalFiles.length === 0) {
+          // Plugin simple : un seul fichier
+          await this.createFile(`/app/plugins/${this.pluginFileName}`, this.mainFileContent)
+          alert(`Plugin ${this.pluginFileName} créé avec succès !`)
+        } else {
+          // Plugin complexe : dossier avec plusieurs fichiers
+          await this.createDirectory(pluginDir)
+          await this.createFile(`${pluginDir}/${this.pluginFileName}`, this.mainFileContent)
+          
+          // Créer les fichiers supplémentaires
+          for (const file of this.additionalFiles) {
+            if (file.name && file.content) {
+              await this.createFile(`${pluginDir}/${file.name}`, file.content)
+            }
+          }
+          
+          alert(`Plugin ${pluginName}/ créé avec succès avec ${this.additionalFiles.length + 1} fichiers !`)
+        }
+
+        // Réinitialiser le formulaire
+        this.pluginFileName = ''
+        this.mainFileContent = ''
+        this.additionalFiles = []
+
+      } catch (error) {
+        console.error('Erreur lors de la création du plugin:', error)
+        alert('Erreur lors de la création du plugin. Voir la console pour plus de détails.')
+      }
+    },
+
+    async createFile(path, content) {
+      const response = await fetch('/api/prompt-generator/create-file', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          path: path,
+          content: content
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      return response.json()
+    },
+
+    async createDirectory(path) {
+      const response = await fetch('/api/prompt-generator/create-directory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          path: path
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      return response.json()
     },
 
     generatePrompt() {
