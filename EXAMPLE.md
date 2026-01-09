@@ -34,7 +34,7 @@ npm run d:npm install @arc-js/timez
 ```
 ## Étape 2 : Générer prompt IA par le plugins propmt-generator
 
-Allez sur http://localhost/api/prompt-generator
+Allez sur http://localhost/generator
 
 Remplissez les champs :
 

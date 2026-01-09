@@ -2,31 +2,24 @@ import fp from 'fastify-plugin'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
+import { createStaticFileRoutes } from '../../core/static-file-router.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 export default fp(async function (fastify) {
 
-  const pluginDir = path.join(__dirname, 'prompt-generator')
+  const pluginDir = path.join(__dirname)
+  const basePath = '/generator'
 
-  // Route HTML
-  fastify.get('/api/prompt-generator', async (_, reply) => {
-    reply.type('text/html').send(fs.readFileSync(path.join(pluginDir, 'index.html')))
-  })
-
-  // Route JS
-  fastify.get('/api/prompt-generator/app.js', async (_, reply) => {
-    reply.type('application/javascript').send(fs.readFileSync(path.join(pluginDir, 'app.js')))
-  })
-
-  // Route pour le template ia_prompt.txt
-  fastify.get('/api/prompt-generator/ia_prompt.txt', async (_, reply) => {
-    reply.type('text/plain').send(fs.readFileSync(path.join(pluginDir, 'ia_prompt.txt')))
+  // Créer les routes pour servir automatiquement tous les fichiers du répertoire
+  // (sauf les fichiers .md)
+  createStaticFileRoutes(fastify, basePath, pluginDir, {
+    excludeExtensions: ['.md']
   })
 
   // Routes pour la création de fichiers et dossiers
-  fastify.post('/api/prompt-generator/create-file', async (request, reply) => {
+  fastify.post(`${basePath}/create-file`, async (request, reply) => {
     try {
       const { path: filePath, content } = request.body
       
@@ -61,7 +54,7 @@ export default fp(async function (fastify) {
     }
   })
 
-  fastify.post('/api/prompt-generator/create-directory', async (request, reply) => {
+  fastify.post(`${basePath}/create-directory`, async (request, reply) => {
     try {
       const { path: dirPath } = request.body
       
@@ -86,4 +79,4 @@ export default fp(async function (fastify) {
     }
   })
 
-}, { name: 'prompt-generator' })
+}, { name: 'generator' })

@@ -14,12 +14,17 @@ Le plugin charge la configuration via fastify.configs.get('{PLUGIN_NAME}.yaml') 
 Au début du fichier, inclure :
 import { EventEmitter } from 'events'
 import path from 'path'
-import { fileURLToPath } from 'url'
-import fs from 'fs/promises'
-import fastifyPlugin from 'fastify-plugin'
+import { createStaticFileRoutes } from '../../core/static-file-router.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-export default fastifyPlugin(async function (fastify) {
+export default fp(async function (fastify) {
+  const pluginDir = path.join(__dirname)
+  const basePath = '/{PLUGIN_NAME}'
+  // Créer les routes pour servir automatiquement tous les fichiers du répertoire
+  createStaticFileRoutes(fastify, basePath, pluginDir, {
+    excludeExtensions: ['.md']
+  })
+
 
 L'interface utilisateur si on en a besoin doit:
 - Utiliser Bootstrap + Bootswatch via CDN
@@ -57,3 +62,4 @@ ATTENTION:
 - je ne veux pas de mutiple ligne de js ou de css dans l'html
 - créé des fichiers séparés pour html et js et css
 - n'ajoute pas de defer sur les script que l'on appelle sauf pour les CDN
+ les fichiers css,js ... seront appelés par /{PLUGIN_NAME}/... 

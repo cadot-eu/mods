@@ -301,7 +301,7 @@ function promptApp() {
         let orderContent = ''
         
         try {
-          const response = await fetch('/api/prompt-generator/order.yaml')
+          const response = await fetch('/generator/order.yaml')
           if (response.ok) {
             orderContent = await response.text()
           }
@@ -348,7 +348,7 @@ function promptApp() {
     },
 
     async createFile(path, content) {
-      const response = await fetch('/api/prompt-generator/create-file', {
+      const response = await fetch('/generator/create-file', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -367,7 +367,7 @@ function promptApp() {
     },
 
     async createDirectory(path) {
-      const response = await fetch('/api/prompt-generator/create-directory', {
+      const response = await fetch('/generator/create-directory', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -387,7 +387,7 @@ function promptApp() {
     async generatePrompt() {
       try {
         // Lire le template ia_prompt.txt
-        const response = await fetch('/api/prompt-generator/ia_prompt.txt')
+        const response = await fetch('/generator/ia_prompt.txt')
         if (!response.ok) {
           throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`)
         }
