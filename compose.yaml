@@ -3,8 +3,13 @@ services:
     image: node:25-alpine
     container_name: mods
     working_dir: /app
+    user: "${UID:-1000}:${GID:-1000}"
+    group_add:
+      - "${GID:-1000}"
     environment:
       - NODE_ENV=${NODE_ENV:-development}
+      - UID=${UID:-1000}
+      - GID=${GID:-1000}
     volumes:
       - ./app:/app
       - /app/node_modules  # Volume anonyme

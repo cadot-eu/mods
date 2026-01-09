@@ -1,9 +1,10 @@
 Crée un plugin Fastify nommé {PLUGIN_NAME} qui a pour but:
 {PURPOSE}
 
-Le fichier JS principal est dans plugins/{PLUGIN_NAME}/{PLUGIN_NAME}.js.
+Le fichier JS principal est dans plugins/{PLUGIN_NAME}.js.
 Les assets sont dans plugins/{PLUGIN_NAME}/ et contiennent les fichiers nécessaires.
-Le plugin charge la configuration via fastify.configs.get('{PLUGIN_NAME}.yaml') ou via les fichiers de configuration créés dans /app/config/ selon les besoins.
+Le plugin charge la configuration via fastify.configs.get('{PLUGIN_NAME}.yaml') ou via les fichiers de configuration créés dans /app/config/ selon les besoins, ce sera l'endroit ou les fichiers de config seront sauvegardés donc pour y accéder utilise par exemple const fichierconfig = path.join(process.cwd(), 'config', FICHIERCONFIG)
+
 
 {ROUTES_SECTION}
 {API_SECTION}
@@ -54,3 +55,5 @@ ATTENTION:
 - je veux que dès que c'est possible l'architecture utilise les décorations Fastify au lieu des appels HTTP
 - je ne veux pas de multiple ligne html dans le js
 - je ne veux pas de mutiple ligne de js ou de css dans l'html
+- créé des fichiers séparés pour html et js et css
+- n'ajoute pas de defer sur les script que l'on appelle sauf pour les CDN

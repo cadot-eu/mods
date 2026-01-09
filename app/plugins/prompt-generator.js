@@ -20,6 +20,11 @@ export default fp(async function (fastify) {
     reply.type('application/javascript').send(fs.readFileSync(path.join(pluginDir, 'app.js')))
   })
 
+  // Route pour le template ia_prompt.txt
+  fastify.get('/api/prompt-generator/ia_prompt.txt', async (_, reply) => {
+    reply.type('text/plain').send(fs.readFileSync(path.join(pluginDir, 'ia_prompt.txt')))
+  })
+
   // Routes pour la création de fichiers et dossiers
   fastify.post('/api/prompt-generator/create-file', async (request, reply) => {
     try {
@@ -30,20 +35,26 @@ export default fp(async function (fastify) {
         return reply.status(400).send({ error: 'Chemin et contenu requis' })
       }
 
+      // Convertir chemin relatif en chemin absolu
+      let absolutePath = filePath
+      if (!path.isAbsolute(filePath)) {
+        absolutePath = path.resolve('/app/plugins', filePath)
+      }
+
       // Vérifier que le chemin est dans le bon répertoire
-      if (!filePath.startsWith('/app/plugins/')) {
+      if (!absolutePath.startsWith('/app/plugins/')) {
         return reply.status(400).send({ error: 'Chemin invalide' })
       }
 
       // Créer le répertoire parent si nécessaire
-      const dir = path.dirname(filePath)
-      await fs.mkdir(dir, { recursive: true })
+      const dir = path.dirname(absolutePath)
+      await fs.promises.mkdir(dir, { recursive: true })
 
       // Écrire le fichier
-      await fs.writeFile(filePath, content)
+      await fs.promises.writeFile(absolutePath, content)
       
-      fastify.log.info(`Fichier créé: ${filePath}`)
-      reply.send({ success: true, path: filePath })
+      fastify.log.info(`Fichier créé: ${absolutePath}`)
+      reply.send({ success: true, path: absolutePath })
     } catch (error) {
       fastify.log.error(`Erreur création fichier: ${error.message}`)
       reply.status(500).send({ error: error.message })
@@ -65,7 +76,7 @@ export default fp(async function (fastify) {
       }
 
       // Créer le répertoire
-      await fs.mkdir(dirPath, { recursive: true })
+      await fs.promises.mkdir(dirPath, { recursive: true })
       
       fastify.log.info(`Répertoire créé: ${dirPath}`)
       reply.send({ success: true, path: dirPath })
