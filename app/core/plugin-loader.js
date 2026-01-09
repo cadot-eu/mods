@@ -20,6 +20,38 @@ export function updatePluginOrder(newOrder) {
   fs.writeFileSync(orderFile, yaml.dump(config))
 }
 
+// Fonction pour obtenir tous les fichiers JS récursivement
+function getAllJSFiles(dir) {
+  const files = []
+  
+  function walk(currentDir) {
+    const items = fs.readdirSync(currentDir)
+    
+    for (const item of items) {
+      const fullPath = path.join(currentDir, item)
+      const stat = fs.statSync(fullPath)
+      
+      if (stat.isDirectory()) {
+        // Si c'est un répertoire, on explore récursivement
+        walk(fullPath)
+      } else if (stat.isFile() && item.endsWith('.js')) {
+        // Si c'est un fichier JS, on l'ajoute avec son chemin relatif
+        const relativePath = path.relative(pluginsDir, fullPath)
+        files.push(relativePath)
+      }
+    }
+  }
+  
+  walk(dir)
+  return files
+}
+
+// Fonction pour extraire le nom du plugin à partir du chemin relatif
+function getPluginNameFromPath(relativePath) {
+  // Extrait le nom du fichier sans l'extension
+  return path.basename(relativePath, '.js')
+}
+
 // Fonction principale de chargement
 export async function loadPlugins(fastify) {
   
@@ -35,19 +67,27 @@ export async function loadPlugins(fastify) {
   }
 
   const order = getPluginOrder()
-  const files = fs.readdirSync(pluginsDir)
-    .filter(f => f.endsWith('.js'))
+  const files = getAllJSFiles(pluginsDir)
   
-  // Ne charge que les plugins qui ont un ordre défini dans order.yaml
+  // Vérifier les plugins dans order.yaml qui ne sont pas trouvés
+  const foundPlugins = new Set()
   const filesWithOrder = files.filter(f => {
-    const pluginName = path.basename(f, '.js')
+    const pluginName = getPluginNameFromPath(f)
+    foundPlugins.add(pluginName)
     return order.includes(pluginName)
   })
   
+  // Afficher un warning pour les plugins dans order.yaml mais non trouvés
+  for (const pluginName of order) {
+    if (!foundPlugins.has(pluginName)) {
+      fastify.log.warn(`Plugin "${pluginName}" est dans order.yaml mais le fichier ${pluginName}.js n'a pas été trouvé`)
+    }
+  }
+  
   // Trie selon order.yaml
   const sortedFiles = filesWithOrder.sort((a, b) => {
-    const nameA = path.basename(a, '.js')
-    const nameB = path.basename(b, '.js')
+    const nameA = getPluginNameFromPath(a)
+    const nameB = getPluginNameFromPath(b)
     const indexA = order.indexOf(nameA)
     const indexB = order.indexOf(nameB)
     
@@ -56,12 +96,12 @@ export async function loadPlugins(fastify) {
 
   // Charge dans l'ordre
   for (const file of sortedFiles) {
-    const pluginName = path.basename(file, '.js')
+    const pluginName = getPluginNameFromPath(file)
     const pluginPath = path.join(pluginsDir, file)
     try {
       const plugin = await import(`file://${pluginPath}`)
       await fastify.register(plugin.default)
-      fastify.log.info(`✓ Plugin ${pluginName} chargé`)
+      fastify.log.info(`✓ Plugin ${pluginName} chargé depuis ${file}`)
     } catch (err) {
       fastify.log.error(`✗ Erreur chargement ${pluginName}: ${err.message}`)
     }

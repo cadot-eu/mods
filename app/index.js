@@ -82,8 +82,8 @@ if (fs.existsSync(envPath)) {
   env = dotenv.parse(fs.readFileSync(envPath, 'utf8'));
 }
 
-const apiKey = env.OPENROUTER_API_KEY;
-const model = env.OPENROUTER_MODEL;
+const apiKey = env.IA_API_KEY;
+const model = env.IA_MODEL;
 
 if (apiKey && model) {
   try {

@@ -9,7 +9,7 @@ services:
       - ./app:/app
       - /app/node_modules  # Volume anonyme
     ports:
-      - 3000
+      - "3000:3000"
     command: >
       sh -eu -c '
         cd /app
@@ -21,5 +21,5 @@ services:
           exec node index.js
         fi
       '
-    restart: ${RESTART_POLICY:-on-failure}
+    restart: ${RESTART_POLICY:-unless-stopped}
 

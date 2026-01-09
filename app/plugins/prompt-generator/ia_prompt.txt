@@ -1,0 +1,56 @@
+Crée un plugin Fastify nommé {PLUGIN_NAME} qui a pour but:
+{PURPOSE}
+
+Le fichier JS principal est dans plugins/{PLUGIN_NAME}/{PLUGIN_NAME}.js.
+Les assets sont dans plugins/{PLUGIN_NAME}/ et contiennent les fichiers nécessaires.
+Le plugin charge la configuration via fastify.configs.get('{PLUGIN_NAME}.yaml') ou via les fichiers de configuration créés dans /app/config/ selon les besoins.
+
+{ROUTES_SECTION}
+{API_SECTION}
+
+{STATIC_ROUTES_SECTION}
+
+Au début du fichier, inclure :
+import { EventEmitter } from 'events'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fs from 'fs/promises'
+import fastifyPlugin from 'fastify-plugin'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+export default fastifyPlugin(async function (fastify) {
+
+L'interface utilisateur si on en a besoin doit:
+- Utiliser Bootstrap + Bootswatch via CDN
+- Utiliser Bootstrap Icons via CDN
+- Utiliser Alpine.js via CDN pour l'interactivité
+- Le layout est basé sur d-flex, responsive et modulaire
+- Éviter tout conflit entre Bootstrap et Alpine.js
+
+Structure du code :
+- Séparer la logique des routes, services et helpers
+- Utiliser EventEmitter pour la communication inter-composants si nécessaire
+- Ajouter des logs informatifs lors du chargement et des actions importantes (fastify.log.info, fastify.log.error)
+- Gérer les erreurs et exceptions dans toutes les routes avec try/catch
+- Le plugin doit être compatible avec import/export ES Modules
+- Utiliser fastify-plugin si le plugin doit être encapsulé
+
+Bonnes pratiques supplémentaires :
+- Préparer le plugin pour être chargé dynamiquement dans Fastify
+- Ajouter des commentaires clairs en français pour faciliter la maintenance et sépare bien les blocks de codes
+- Rendre la structure facile à étendre pour ajouter de nouvelles routes ou pages
+- Utiliser fastify.decorate pour exposer les API publiques du plugin
+- Gérer proprement le hook onClose pour nettoyer les ressources (timers, connexions, listeners)
+
+Intégrations possibles (si pertinent) :
+- fastify.sqlite pour la persistance des données (writePoint, findAll, query, getTables)
+- fastify.configs pour accéder aux configurations YAML
+
+ATTENTION:
+- Ne créé pas de fichier inutiles ou presque vide qui ne sont pas indispensables au fonctionnement
+- Fais au plus simple, je veux que le plugins fonctionne, évite les conditions superflus
+- donne moi les fichiers un par un - donne moi les fichiers un par un
+- donne moi les fichiers un par un - donne moi les fichiers un par un 
+- je veux que dès que c'est possible l'architecture utilise les décorations Fastify au lieu des appels HTTP
+- je ne veux pas de multiple ligne html dans le js
+- je ne veux pas de mutiple ligne de js ou de css dans l'html
