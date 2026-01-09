@@ -3,28 +3,22 @@ services:
     image: node:25-alpine
     container_name: mods
     working_dir: /app
-    user: "${UID:-1000}:${GID:-1000}"
-    group_add:
-      - "${GID:-1000}"
     environment:
       - NODE_ENV=${NODE_ENV:-development}
-      - UID=${UID:-1000}
-      - GID=${GID:-1000}
     volumes:
       - ./app:/app
-      - /app/node_modules  # Volume anonyme
+      - node_modules:/app/node_modules
     ports:
       - "3000:3000"
     command: >
-      sh -eu -c '
-        cd /app
-        if [ "${NODE_ENV}" = "production" ]; then
-          if [ -f package-lock.json ]; then npm ci --only=production; else npm install --omit=dev; fi
-          exec node index.js
-        else
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
-          exec node index.js
-        fi
+      sh -c '
+        apk add --no-cache su-exec
+        npm ci 2>/dev/null || npm install
+        mkdir -p logs uploads data
+        chown -R ${UID:-1000}:${GID:-1000} logs uploads data
+        exec su-exec ${UID:-1000}:${GID:-1000} node index.js
       '
     restart: ${RESTART_POLICY:-unless-stopped}
 
+volumes:
+  node_modules:
