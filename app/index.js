@@ -4,9 +4,10 @@ import HotConfig from './core/hot-config.js';
 import { createLoggerMixin } from './core/log.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fastifyStatic from '@fastify/static';
+import fastifyCookie from '@fastify/cookie';
 import fs from 'fs';
-import dotenv from 'dotenv';
+import authPlugin from './core/auth.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,23 +42,28 @@ const fastify = Fastify({
   }
 });
 
+
+
 // Charger et surveiller les configs avec HotConfig
 const configs = new HotConfig('./config', { 
   logger: fastify.log,
   restartOnUpdate: true  // Active le redémarrage automatique lors des modifications
 });
+
+// Démarrer HotConfig et attendre explicitement la fin du chargement
 await configs.start();
+await configs.loadAllConfigs(); // S'assurer que TOUTES les configs sont chargées
 
 // Rendre les configs accessibles dans fastify
 fastify.decorate('configs', configs);
 
-// Servir les fichiers statiques depuis app/static à la racine
-await fastify.register(fastifyStatic, {
-  root: path.join(__dirname, 'static'),
-  prefix: '/',
-  // cache désactivé pour simplicité en dev
-  decorateReply: false
-});
+// Enregistrer le plugin cookie AVANT de charger les plugins
+await fastify.register(fastifyCookie);
+// Enregistrer le plugin auth APRÈS les configs mais AVANT les autres plugins
+await fastify.register(authPlugin);
+
+// Charger les plugins APRÈS le plugin auth
+await loadPlugins(fastify);
 
 // Route explicite pour /favicon.ico (fallback si nécessaire)
 fastify.get('/favicon.ico', async (request, reply) => {
@@ -74,32 +80,6 @@ fastify.get('/favicon.ico', async (request, reply) => {
   return reply.code(404).send();
 });
 
-// Vérifier et charger automatiquement le plugin IA si les variables d'environnement sont présentes
-const envPath = path.join(__dirname, '.env.local');
-let env = {};
-
-if (fs.existsSync(envPath)) {
-  env = dotenv.parse(fs.readFileSync(envPath, 'utf8'));
-}
-
-const apiKey = env.IA_API_KEY;
-const model = env.IA_MODEL;
-
-if (apiKey && model) {
-  try {
-    const iaPlugin = await import('./core/ia.js');
-    await fastify.register(iaPlugin.default);
-    fastify.log.info('Plugin IA chargé automatiquement');
-  } catch (error) {
-    fastify.log.error(`Erreur chargement plugin IA: ${error.message}`);
-  }
-} else {
-  fastify.log.info('Plugin IA désactivé: variables d\'environnement manquantes');
-}
-
-// Charge tous les plugins
-await loadPlugins(fastify);
-
 // Gérer la fermeture propre
 fastify.addHook('onClose', async () => {
   configs.stop();
@@ -115,3 +95,4 @@ fastify.addHook('onResponse', async (request, reply) => {
 });
 
 await fastify.listen({ port: 3000, host: '0.0.0.0' });
+

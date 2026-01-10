@@ -7,6 +7,7 @@ import { spawn, fork } from 'child_process';
 class HotConfig {
   constructor(configDir, options = {}) {
     this.configDir = path.resolve(configDir);
+    this.pluginsDir = path.resolve(options.pluginsDir || './plugins');
     this.configs = new Map();
     this.watchers = [];
     this.callbacks = [];
@@ -59,8 +60,8 @@ class HotConfig {
   // Obtient le nom de base d'un fichier de surcharge
   getBaseConfigName(filename) {
     const baseName = path.basename(filename);
-    const match = baseName.match(/^(.+?)-surcharge\./);
-    return match ? match[1] : null;
+    const match = baseName.match(/^(.+?)-surcharge\.(.+)$/);
+    return match ? match[1] + '.' + match[2] : null;
   }
 
   // Applique les surcharges à une configuration
@@ -124,7 +125,7 @@ class HotConfig {
 
     for (const file of files) {
       const filePath = path.join(this.configDir, file);
-      const configName = path.basename(file, path.extname(file));
+      const configName = path.basename(file);
       
       try {
         const config = await this.loadConfigFile(filePath);
@@ -180,7 +181,7 @@ class HotConfig {
       if (filename && /\.(js|mjs|json|ya?ml)$/i.test(filename)) {
         if (eventType === 'change' || eventType === 'rename') {
           const filePath = path.join(this.configDir, filename);
-          const configName = path.basename(filename, path.extname(filename));
+          const configName = path.basename(filename);
           
           // Vérifier si le fichier existe (rename peut être une suppression)
           if (!fs.existsSync(filePath)) {
@@ -262,6 +263,32 @@ class HotConfig {
         }
       }
     });
+    
+    // Surveiller aussi le répertoire plugins
+    if (fs.existsSync(this.pluginsDir)) {
+      const pluginsWatcher = fs.watch(this.pluginsDir, { recursive: true }, async (eventType, filename) => {
+        if (filename && /\.(js|mjs|json|ya?ml|html|css)$/i.test(filename)) {
+          if (eventType === 'change' || eventType === 'rename') {
+            if (this.logger) {
+              this.logger.info(`Plugin file "${filename}" ${eventType}`);
+            } else {
+              console.log(`Plugin file "${filename}" ${eventType}`);
+            }
+            
+            // Redémarrer l'application en cas de changement dans les plugins
+            if (this.logger) {
+              this.logger.info(`Restarting application due to plugin change...`);
+            } else {
+              console.log(`Restarting application due to plugin change...`);
+            }
+            
+            process.exit(42);
+          }
+        }
+      });
+      
+      this.watchers.push(pluginsWatcher);
+    }
     
     // Log les configs chargées
     if (this.logger) {

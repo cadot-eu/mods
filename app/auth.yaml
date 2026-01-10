@@ -1,0 +1,9 @@
+users:
+  admin:
+    password: $2b$10$27dA6h3G3xSM89eKMGFN8.H9JfmMXuAU0SwO1Df5kTnAEDWVq2WVu
+    role: admin
+  test:
+    password: $2b$10$RLjZ5tOPYmw4XARnBtVn7e/xcvo.lsv8pPRcq7HfH7nYNVOc2b2.2
+    role: user
+session:
+  maxAge: 86400000

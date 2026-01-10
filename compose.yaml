@@ -13,7 +13,7 @@ services:
     command: >
       sh -c '
         apk add --no-cache su-exec
-        npm ci 2>/dev/null || npm install
+        npm install --no-optional
         mkdir -p logs uploads data
         chown -R ${UID:-1000}:${GID:-1000} logs uploads data
         exec su-exec ${UID:-1000}:${GID:-1000} node index.js

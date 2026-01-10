@@ -297,49 +297,32 @@ function promptApp() {
 
     async addPluginToOrder(pluginName) {
       try {
-        // Lire le contenu actuel du fichier order.yaml
-        let orderContent = ''
+        // Utiliser fastify.configs pour lire la configuration
+        const response = await fetch('/api/configs/order.yaml')
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`)
+        }
         
-        try {
-          const response = await fetch('/generator/order.yaml')
-          if (response.ok) {
-            orderContent = await response.text()
-          }
-        } catch (e) {
-          // Si la lecture échoue, on continuera avec un contenu vide
-        }
-
-        // Si le fichier est vide ou n'existe pas, créer une structure de base
-        if (!orderContent.trim()) {
-          orderContent = 'order:\n'
-        }
-
+        const config = await response.json()
+        const order = config.order || []
+        
         // Vérifier si le plugin est déjà dans la liste
-        const lines = orderContent.split('\n')
-        const existingPlugins = lines
-          .filter(line => line.trim().startsWith('- '))
-          .map(line => line.trim().substring(2))
-        
-        if (!existingPlugins.includes(pluginName)) {
-          // Trouver la dernière ligne de plugin pour insérer le nouveau à la fin
-          let insertIndex = lines.length
+        if (!order.includes(pluginName)) {
+          // Ajouter le plugin à la fin
+          order.push(pluginName)
           
-          // Chercher la dernière ligne avec un plugin
-          for (let i = lines.length - 1; i >= 0; i--) {
-            if (lines[i].trim().startsWith('- ')) {
-              insertIndex = i + 1
-              break
-            }
+          // Mettre à jour la configuration
+          const updateResponse = await fetch('/api/configs/order.yaml', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ order: order })
+          })
+          
+          if (!updateResponse.ok) {
+            throw new Error(`Erreur HTTP ${updateResponse.status}: ${updateResponse.statusText}`)
           }
-
-          // Insérer le nouveau plugin
-          lines.splice(insertIndex, 0, `  - ${pluginName}`)
-          
-          // Reconstruire le contenu
-          const newOrderContent = lines.join('\n')
-          
-          // Écrire le fichier mis à jour
-          await this.createFile('/app/config/order.yaml', newOrderContent)
         }
       } catch (error) {
         console.warn('Erreur lors de l\'ajout du plugin à order.yaml:', error)
@@ -437,3 +420,4 @@ Les API doivent être accessibles via fastify.nomDuPlugin.\n`
     }
   }
 }
+        

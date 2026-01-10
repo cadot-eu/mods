@@ -54,12 +54,15 @@ Intégrations possibles (si pertinent) :
 
 ATTENTION:
 - Ne créé pas de fichier inutiles ou presque vide qui ne sont pas indispensables au fonctionnement
-- Fais au plus simple, je veux que le plugins fonctionne, évite les conditions superflus
-- donne moi les fichiers un par un - donne moi les fichiers un par un
-- donne moi les fichiers un par un - donne moi les fichiers un par un 
+- Fais au plus simple, je veux que le plugins fonctionne, évite les conditions superflus 
 - je veux que dès que c'est possible l'architecture utilise les décorations Fastify au lieu des appels HTTP
 - je ne veux pas de multiple ligne html dans le js
 - je ne veux pas de mutiple ligne de js ou de css dans l'html
 - créé des fichiers séparés pour html et js et css
 - n'ajoute pas de defer sur les script que l'on appelle sauf pour les CDN
  les fichiers css,js ... seront appelés par /{PLUGIN_NAME}/... 
+- tous les fichiers sont dans le même répertoire, pas de sous-répertoire
+- ajoute le cdn de Bootswatch avec le thème darkly
+- le premier html s'apelle index.html
+- le plugin quand il se lance affiche un log avec toutes ces url accessible par navigateur et en dessous ses routes fastify
+
